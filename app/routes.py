@@ -69,7 +69,7 @@ def post_image():
     db.session.commit()
     response=jsonify(image.to_dict())
     response.status_code=201
-    response['Location']=url_for('get_image',filename=image.filename)
+    response.headers['Location']=url_for('get_image',filename=image.filename)
     return response
 
 @app.route('/images/<string:filename>',methods=['DELETE'])
@@ -80,7 +80,7 @@ def delete_image(filename):
     data = image.to_dict()
     response=jsonify(data)
     response.status_code=200
-    response['Location']=url_for('get_image',filename=image.filename)
+    response.headers['Location']=url_for('get_image',filename=image.filename)
     db.session.delete(image)
     db.session.commit()
     return response
