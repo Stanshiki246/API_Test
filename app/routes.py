@@ -1,6 +1,7 @@
 from flask import url_for,request,jsonify
 from app import app,db
 from app.models.Payments import Payments
+from app.models.Images import Images
 from app.errors import bad_request
 
 @app.route('/payments/<int:order_id>',methods=['GET'])
@@ -34,6 +35,8 @@ def post_payment():
 @app.route('/payments/<int:order_id>',methods=['DELETE'])
 def delete_payment(order_id):
     payment = Payments.query.filter_by(order_id=order_id).first_or_404()
+    if payment is None:
+        return bad_request('Payment Proof is not in here')
     data = payment.to_dict()
     response=jsonify(data)
     response.status_code = 200
@@ -42,3 +45,42 @@ def delete_payment(order_id):
     db.session.commit()
     return response
 
+@app.route('/images/<string:filename>',methods=['GET'])
+def get_image(filename):
+    data = Images.query.filter_by(filename=filename).first_or_404()
+    return jsonify(data.to_dict())
+
+@app.route('/images/all',methods=['GET'])
+def get_images():
+    images=Images.query.all()
+    data={'Results': []}
+    for image in images:
+        data['Results'].append(image.to_dict())
+    return jsonify(data)
+
+@app.route('/images/',methods=['POST'])
+def post_image():
+    data = request.get_json() or {}
+    if 'Filename' not in data or 'Title' not in data or 'Author' not in data or 'Book Type' not in data or 'Price' not in data:
+        return bad_request('Image needs to be in data')
+    image=Images()
+    image.from_dict(data)
+    db.session.add(image)
+    db.session.commit()
+    response=jsonify(image.to_dict())
+    response.status_code=201
+    response['Location']=url_for('get_image',filename=image.filename)
+    return response
+
+@app.route('/images/<string:filename>',methods=['DELETE'])
+def delete_image(filename):
+    image = Images.query.filter_by(filename=filename).first_or_404()
+    if image is None:
+        return bad_request('Image is not in here')
+    data = image.to_dict()
+    response=jsonify(data)
+    response.status_code=200
+    response['Location']=url_for('get_image',filename=image.filename)
+    db.session.delete(image)
+    db.session.commit()
+    return response
