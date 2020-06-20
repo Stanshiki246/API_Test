@@ -61,7 +61,7 @@ def get_images():
 @app.route('/images/',methods=['POST'])
 def post_image():
     data = request.get_json() or {}
-    if 'Filename' not in data or 'Title' not in data or 'Author' not in data or 'Book Type' not in data or 'Price' not in data:
+    if 'filename' not in data or 'title' not in data or 'author' not in data or 'booktype' not in data or 'price' not in data:
         return bad_request('Image needs to be in data')
     image=Images()
     image.from_dict(data)
